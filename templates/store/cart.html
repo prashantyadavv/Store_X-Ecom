@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cart</title>
+</head>
+
+<body>
+
+
+    <h1>Your Cart</h1>
+
+    {% if products %}
+    {% for product in products %}
+    <div>
+        <h2>{{ product.name }}</h2>
+        <p>Price: ₹{{ product.price }}</p>
+        <p>
+            Quantity:
+            <a href="{% url 'decrease_quantity' product.id %}">-</a>
+            {{ product.quantity }}
+            <a href="{% url 'increase_quantity' product.id %}">+</a>
+        </p>
+        <p>Subtotal: ₹{{ product.subtotal }}</p>
+        <a href="{% url 'remove_from_cart' product.id %}">
+            <button>Remove</button>
+        </a>
+        <hr>
+    </div>
+    {% endfor %}
+
+    <h2>Total: ₹{{ total }}</h2>
+    <a href="{% url 'checkout' %}">
+        <a href="{% url 'address' %}">Proceed to Checkout</a>
+    </a>
+    {% else %}
+    <p>Your cart is empty.</p>
+    {% endif %}
+
+    <a href="/">Continue Shopping</a>
+    {% if messages %}
+    {% for message in messages %}
+    <p style="color:red;">{{ message }}</p>
+    {% endfor %}
+    {% endif %}
+
+
+</body>
+
+</html>
+
+

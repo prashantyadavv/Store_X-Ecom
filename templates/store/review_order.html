@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Review Order</title>
+</head>
+
+<body>
+
+<h2>Review Your Order</h2>
+
+<h3>Delivery Address</h3>
+
+<p>
+{{ address.full_name }} <br>
+{{ address.phone }} <br>
+{{ address.address_line }} <br>
+{{ address.city }} - {{ address.pincode }} <br>
+{{ address.state }}
+</p>
+
+<h3>Products</h3>
+
+<table border="1" cellpadding="10">
+
+<tr>
+<th>Image</th>
+<th>Product</th>
+<th>Quantity</th>
+<th>Price</th>
+<th>Subtotal</th>
+</tr>
+
+{% for product in products %}
+
+<tr>
+
+<td>
+<img src="{{ product.image.url }}" width="80">
+</td>
+
+<td>{{ product.name }}</td>
+
+<td>{{ product.quantity }}</td>
+
+<td>₹{{ product.price }}</td>
+
+<td>₹{{ product.subtotal }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<h3>Total: ₹{{ total }}</h3>
+
+<br>
+
+<a href="{% url 'payment' %}">
+<button>Proceed to Payment</button>
+</a>
+
+</body>
+</html>

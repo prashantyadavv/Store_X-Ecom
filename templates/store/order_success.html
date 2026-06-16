@@ -1,0 +1,15 @@
+<h2>🎉 Order Successful!</h2>
+
+<p>Your Order ID: {{ order.id }}</p>
+
+<h3>Products</h3>
+
+{% for product in products %}
+
+<p>{{ product.name }} - {{ product.quantity }} x ₹{{ product.price }}</p>
+
+{% endfor %}
+
+<h3>Total: ₹{{ total }}</h3>
+
+<a href="/">Continue Shopping</a>
