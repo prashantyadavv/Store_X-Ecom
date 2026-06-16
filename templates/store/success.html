@@ -1,5 +1,38 @@
-<h1>Order Successful!</h1>
-<p>Your Order ID: {{ order.id }}</p>
-<p>Total Paid: ₹{{ order.total_amount }}</p>
+{% extends 'store/base.html' %}
 
-<a href="/">Continue Shopping</a>
+{% block title %}Order Confirmed — Store_X{% endblock %}
+
+{% block extra_css %}
+<style>
+  .sc-container { width: 92%; max-width: 600px; margin: 0 auto; padding: 60px 0; text-align: center; }
+  .sc-check {
+    width: 90px; height: 90px; margin: 0 auto 24px; border-radius: 50%;
+    background: linear-gradient(135deg, #34d399, var(--green));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: white; animation: pop 0.5s ease;
+    box-shadow: 0 4px 20px rgba(0,118,0,0.3);
+  }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .sc-title { font-size: 28px; font-weight: 900; margin-bottom: 8px; }
+  .sc-sub { font-size: 16px; color: var(--text-mid); margin-bottom: 12px; }
+  .sc-id { display: inline-block; background: #f0f7ff; border: 1px solid #bde0fe; padding: 8px 20px; border-radius: var(--radius-sm); font-weight: 700; color: var(--blue-dark); margin-bottom: 14px; }
+  .sc-total { font-size: 24px; font-weight: 800; margin-bottom: 30px; }
+  .sc-total small { font-size: 16px; font-weight: 400; color: var(--text-light); }
+  .sc-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .sc-actions .btn { padding: 12px 28px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sc-container">
+  <div class="sc-check"><i class="fa fa-check"></i></div>
+  <h1 class="sc-title">Order Confirmed!</h1>
+  <p class="sc-sub">Your order has been placed successfully</p>
+  <div class="sc-id"><i class="fa fa-receipt"></i> Order #{{ order.id }}</div>
+  <div class="sc-total">₹{{ order.total_amount }} <small>paid</small></div>
+  <div class="sc-actions">
+    <a href="{% url 'track_order' %}?order_id={{ order.id }}" class="btn btn-primary"><i class="fa fa-truck"></i> Track Order</a>
+    <a href="{% url 'home' %}" class="btn btn-secondary"><i class="fa fa-shopping-bag"></i> Continue Shopping</a>
+  </div>
+</div>
+{% endblock %}

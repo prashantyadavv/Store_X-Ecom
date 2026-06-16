@@ -1,15 +1,130 @@
-<h2>🎉 Order Successful!</h2>
+{% extends 'store/base.html' %}
 
-<p>Your Order ID: {{ order.id }}</p>
+{% block title %}Order Confirmed! — Store_X{% endblock %}
 
-<h3>Products</h3>
+{% block extra_css %}
+<style>
+  .os-container { width: 92%; max-width: 700px; margin: 0 auto; padding: 40px 0 60px; text-align: center; }
 
-{% for product in products %}
+  /* Confetti */
+  .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; overflow: hidden; }
+  .confetti-piece {
+    position: absolute; top: -20px; width: 10px; height: 10px; border-radius: 2px;
+    animation: confettiFall 3.5s ease-in forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
 
-<p>{{ product.name }} - {{ product.quantity }} x ₹{{ product.price }}</p>
+  /* Checkmark */
+  .os-check {
+    width: 90px; height: 90px; margin: 0 auto 24px; border-radius: 50%;
+    background: linear-gradient(135deg, #34d399, var(--green));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: white;
+    animation: scaleIn 0.5s ease;
+    box-shadow: 0 4px 20px rgba(0,118,0,0.3);
+  }
+  @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-{% endfor %}
+  .os-title { font-size: 30px; font-weight: 900; margin-bottom: 8px; }
+  .os-subtitle { font-size: 16px; color: var(--text-mid); margin-bottom: 10px; }
+  .os-order-id {
+    display: inline-block; background: #f0f7ff; border: 1px solid #bde0fe;
+    padding: 8px 20px; border-radius: var(--radius-sm); font-size: 15px;
+    font-weight: 700; color: var(--blue-dark); margin-bottom: 30px;
+  }
 
-<h3>Total: ₹{{ total }}</h3>
+  /* Items */
+  .os-items {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 24px; margin-bottom: 24px; text-align: left;
+  }
+  .os-items h3 { font-size: 16px; font-weight: 800; margin-bottom: 14px; }
+  .os-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+  .os-item:last-child { border-bottom: none; }
+  .os-item-img { width: 60px; height: 60px; border-radius: var(--radius-sm); overflow: hidden; background: #f7f7f7; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .os-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .os-item-info { flex: 1; }
+  .os-item-name { font-size: 14px; font-weight: 600; }
+  .os-item-meta { font-size: 12px; color: var(--text-light); }
+  .os-item-price { font-weight: 700; font-size: 15px; white-space: nowrap; }
 
-<a href="/">Continue Shopping</a>
+  .os-total {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px; margin-bottom: 30px;
+    display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 800;
+  }
+
+  .os-delivery { font-size: 14px; color: var(--text-light); margin-bottom: 28px; }
+  .os-delivery i { color: var(--green); }
+
+  .os-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .os-actions .btn { padding: 12px 28px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Confetti -->
+<div class="confetti-container" id="confetti"></div>
+
+<div class="os-container">
+  <div class="os-check"><i class="fa fa-check"></i></div>
+  <h1 class="os-title">Order Placed Successfully!</h1>
+  <p class="os-subtitle">Thank you for shopping with Store_X</p>
+  <div class="os-order-id"><i class="fa fa-receipt"></i> Order #{{ order.id }}</div>
+
+  {% if products %}
+  <div class="os-items">
+    <h3><i class="fa fa-box"></i> Order Items</h3>
+    {% for product in products %}
+    <div class="os-item">
+      <div class="os-item-img">
+        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}"/>
+        {% else %}<i class="fa fa-image" style="opacity:0.2;"></i>{% endif %}
+      </div>
+      <div class="os-item-info">
+        <div class="os-item-name">{{ product.name }}</div>
+        <div class="os-item-meta">Qty: {{ product.quantity }}</div>
+      </div>
+      <div class="os-item-price">₹{{ product.subtotal }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="os-total">
+    <span>Total Paid</span>
+    <span>₹{{ total|default:order.total_amount }}</span>
+  </div>
+
+  <div class="os-delivery"><i class="fa fa-truck-fast"></i> Estimated delivery: 3-5 business days</div>
+
+  <div class="os-actions">
+    <a href="{% url 'track_order' %}?order_id={{ order.id }}" class="btn btn-primary"><i class="fa fa-truck"></i> Track Order</a>
+    <a href="{% url 'home' %}" class="btn btn-secondary"><i class="fa fa-shopping-bag"></i> Continue Shopping</a>
+    <a href="{% url 'my_orders' %}" class="btn btn-secondary"><i class="fa fa-box"></i> My Orders</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Confetti animation
+  const confettiContainer = document.getElementById('confetti');
+  const colors = ['#FF9900','#febd69','#34d399','#3b82f6','#f43f5e','#a855f7','#eab308'];
+  for(let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 2 + 's';
+    piece.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    confettiContainer.appendChild(piece);
+  }
+  setTimeout(() => confettiContainer.remove(), 5000);
+</script>
+{% endblock %}

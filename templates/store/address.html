@@ -1,74 +1,157 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends 'store/base.html' %}
 
-<title>Delivery Address - Store_X</title>
+{% block title %}Delivery Address — Store_X{% endblock %}
 
+{% block extra_css %}
 <style>
+  .ck-container { width: 92%; max-width: 900px; margin: 0 auto; padding: 24px 0 60px; }
 
-body{
-font-family:Arial;
-background:#f0f2f5;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
+  /* Stepper */
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 36px; }
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step-circle {
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; transition: var(--transition);
+  }
+  .step-circle.active { background: var(--primary); color: white; box-shadow: 0 0 12px var(--primary-glow); }
+  .step-circle.done { background: var(--green); color: white; }
+  .step-circle.pending { background: #e0e0e0; color: var(--text-light); }
+  .step-label { font-size: 14px; font-weight: 600; }
+  .step-label.active { color: var(--primary); }
+  .step-label.done { color: var(--green); }
+  .step-label.pending { color: var(--text-light); }
+  .step-line { width: 60px; height: 2px; margin: 0 8px; }
+  .step-line.done { background: var(--green); }
+  .step-line.pending { background: #e0e0e0; }
 
-.container{
-background:white;
-padding:40px;
-width:400px;
-border-radius:8px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
-}
+  .ck-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; }
+  .ck-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+  .ck-card h2 em { font-style: normal; color: var(--primary); }
 
-input{
-width:100%;
-padding:10px;
-margin:10px 0;
-}
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.full { grid-column: 1 / -1; }
+  .form-field label { font-size: 13px; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-field input, .form-field select {
+    padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: var(--radius-sm);
+    font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .form-field input:focus, .form-field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 
-button{
-width:100%;
-padding:10px;
-background:#ff9900;
-border:none;
-color:white;
-font-size:16px;
-}
+  .form-submit { margin-top: 28px; text-align: right; }
+  .form-submit .btn { padding: 14px 36px; font-size: 16px; }
 
+  /* Saved addresses */
+  .saved-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text-mid); }
+  .saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-bottom: 30px; }
+  .saved-card {
+    border: 2px solid #e8e8e8; border-radius: var(--radius); padding: 16px;
+    cursor: pointer; transition: var(--transition-fast); font-size: 14px; line-height: 1.6;
+  }
+  .saved-card:hover { border-color: var(--primary); box-shadow: 0 2px 12px var(--primary-glow); }
+  .saved-card strong { display: block; font-size: 15px; margin-bottom: 4px; }
+  .saved-card .phone { color: var(--text-light); }
+
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .stepper { flex-wrap: wrap; gap: 4px; }
+    .step-line { width: 30px; }
+  }
 </style>
+{% endblock %}
 
-</head>
+{% block content %}
+<div class="ck-container">
+  <div class="breadcrumb">
+    <a href="{% url 'home' %}">Home</a> <span class="sep">›</span>
+    <a href="{% url 'cart_detail' %}">Cart</a> <span class="sep">›</span>
+    <span>Delivery Address</span>
+  </div>
 
-<body>
+  <!-- Stepper -->
+  <div class="stepper">
+    <div class="step"><div class="step-circle active">1</div><span class="step-label active">Address</span></div>
+    <div class="step-line pending"></div>
+    <div class="step"><div class="step-circle pending">2</div><span class="step-label pending">Review</span></div>
+    <div class="step-line pending"></div>
+    <div class="step"><div class="step-circle pending">3</div><span class="step-label pending">Payment</span></div>
+    <div class="step-line pending"></div>
+    <div class="step"><div class="step-circle pending"><i class="fa fa-check"></i></div><span class="step-label pending">Done</span></div>
+  </div>
 
-<div class="container">
+  <div class="ck-card">
+    <h2>Delivery <em>Address</em></h2>
 
-<h2>Delivery Address</h2>
+    {% if saved_addresses %}
+    <div class="saved-title"><i class="fa fa-bookmark"></i> Your saved addresses</div>
+    <div class="saved-grid">
+      {% for addr in saved_addresses %}
+      <div class="saved-card" onclick="fillAddress('{{ addr.full_name }}','{{ addr.phone }}','{{ addr.address_line }}','{{ addr.city }}','{{ addr.state }}','{{ addr.pincode }}')">
+        <strong>{{ addr.full_name }}</strong>
+        {{ addr.address_line }}<br>
+        {{ addr.city }}, {{ addr.state }} — {{ addr.pincode }}<br>
+        <span class="phone"><i class="fa fa-phone"></i> {{ addr.phone }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
-<form method="POST">
-
-{% csrf_token %}
-
-<input type="text" name="full_name" placeholder="Full Name" required>
-
-<input type="text" name="phone" placeholder="Phone Number" required>
-
-<input type="text" name="address" placeholder="Address" required>
-
-<input type="text" name="city" placeholder="City" required>
-
-<input type="text" name="state" placeholder="State" required>
-
-<input type="text" name="pincode" placeholder="Pincode" required>
-
-<button type="submit">Continue to Payment</button>
-
-</form>
-
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Full Name</label>
+          <input type="text" name="full_name" id="fn" placeholder="John Doe" required />
+        </div>
+        <div class="form-field">
+          <label>Phone Number</label>
+          <input type="tel" name="phone" id="ph" placeholder="9876543210" required />
+        </div>
+        <div class="form-field full">
+          <label>Address</label>
+          <input type="text" name="address" id="ad" placeholder="House no., Street, Area, Landmark" required />
+        </div>
+        <div class="form-field">
+          <label>City</label>
+          <input type="text" name="city" id="ci" placeholder="Mumbai" required />
+        </div>
+        <div class="form-field">
+          <label>State</label>
+          <select name="state" id="st" required>
+            <option value="">Select State</option>
+            <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option>
+            <option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option><option>Haryana</option>
+            <option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+            <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option>
+            <option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Punjab</option>
+            <option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
+            <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
+            <option>Delhi</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Pincode</label>
+          <input type="text" name="pincode" id="pc" placeholder="400001" maxlength="6" required />
+        </div>
+      </div>
+      <div class="form-submit">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-arrow-right"></i> Continue to Review</button>
+      </div>
+    </form>
+  </div>
 </div>
+{% endblock %}
 
-</body>
-</html>
+{% block extra_js %}
+<script>
+  function fillAddress(fn,ph,ad,ci,st,pc) {
+    document.getElementById('fn').value = fn;
+    document.getElementById('ph').value = ph;
+    document.getElementById('ad').value = ad;
+    document.getElementById('ci').value = ci;
+    const sel = document.getElementById('st');
+    for(let o of sel.options) { if(o.text === st) { o.selected = true; break; } }
+    document.getElementById('pc').value = pc;
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Track Order — Store_X{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tk-container { width: 92%; max-width: 800px; margin: 0 auto; padding: 24px 0 60px; }
+  .tk-title { font-size: 28px; font-weight: 800; margin-bottom: 24px; }
+  .tk-title em { font-style: normal; color: var(--primary); }
+
+  /* Search */
+  .tk-search {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 28px; margin-bottom: 28px;
+  }
+  .tk-search-label { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-mid); }
+  .tk-search-form { display: flex; gap: 12px; }
+  .tk-search-input {
+    flex: 1; padding: 14px 18px; border: 2px solid #e0e0e0; border-radius: var(--radius-sm);
+    font-size: 16px; outline: none; transition: border-color 0.2s;
+  }
+  .tk-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+  .tk-search-btn {
+    padding: 14px 28px; background: linear-gradient(180deg, #FFB84D, var(--primary));
+    color: var(--navy); border: none; border-radius: var(--radius-sm);
+    font-size: 16px; font-weight: 700; cursor: pointer; transition: var(--transition);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tk-search-btn:hover { transform: translateY(-2px); }
+
+  /* Error */
+  .tk-error {
+    background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius);
+    padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+    font-size: 15px; color: var(--red);
+  }
+  .tk-error i { font-size: 20px; }
+
+  /* Progress Tracker */
+  .tk-progress {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 36px 28px; margin-bottom: 24px;
+  }
+  .tk-steps { display: flex; align-items: flex-start; justify-content: space-between; position: relative; }
+  .tk-steps::before {
+    content: ''; position: absolute; top: 24px; left: 10%; right: 10%;
+    height: 3px; background: #e0e0e0; z-index: 0;
+  }
+  .tk-step { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; z-index: 1; flex: 1; }
+  .tk-step-icon {
+    width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; background: #e0e0e0; color: var(--text-light); transition: var(--transition);
+  }
+  .tk-step.done .tk-step-icon { background: var(--green); color: white; }
+  .tk-step.current .tk-step-icon {
+    background: var(--primary); color: white;
+    box-shadow: 0 0 0 6px var(--primary-glow);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 6px var(--primary-glow); } 50% { box-shadow: 0 0 0 12px rgba(255,153,0,0.1); } }
+  .tk-step-label { font-size: 13px; font-weight: 700; text-align: center; }
+  .tk-step.done .tk-step-label { color: var(--green); }
+  .tk-step.current .tk-step-label { color: var(--primary); }
+  .tk-step.pending .tk-step-label { color: var(--text-light); }
+
+  /* Done line override */
+  .tk-line-done {
+    position: absolute; top: 24px; height: 3px; background: var(--green); z-index: 0;
+    left: 10%; transition: width 0.5s ease;
+  }
+
+  /* Order Info */
+  .tk-info {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .tk-info-item { }
+  .tk-info-label { font-size: 12px; color: var(--text-light); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .tk-info-value { font-size: 16px; font-weight: 700; }
+
+  /* Initial state */
+  .tk-initial { text-align: center; padding: 60px 20px; }
+  .tk-initial i { font-size: 64px; color: #e0e0e0; margin-bottom: 20px; }
+  .tk-initial h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .tk-initial p { color: var(--text-light); }
+
+  @media (max-width: 768px) {
+    .tk-search-form { flex-direction: column; }
+    .tk-steps { gap: 8px; }
+    .tk-info { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tk-container">
+  <h1 class="tk-title">Track <em>Order</em></h1>
+
+  <div class="tk-search">
+    <div class="tk-search-label"><i class="fa fa-search"></i> Enter your Order ID to track</div>
+    <form class="tk-search-form" method="get">
+      <input class="tk-search-input" type="text" name="order_id" placeholder="e.g. 1001" value="{{ order.id|default:'' }}" required />
+      <button class="tk-search-btn" type="submit"><i class="fa fa-search"></i> Track</button>
+    </form>
+  </div>
+
+  {% if searched and error %}
+  <div class="tk-error"><i class="fa fa-circle-exclamation"></i> {{ error }}</div>
+  {% endif %}
+
+  {% if order %}
+  <div class="tk-progress">
+    {% with status=order.status %}
+    <div class="tk-steps">
+      <div class="tk-line-done" style="width:{% if status == 'Placed' %}0%{% elif status == 'Packed' %}26%{% elif status == 'Shipped' %}53%{% elif status == 'Delivered' %}80%{% endif %};"></div>
+      <div class="tk-step {% if status == 'Placed' %}current{% elif status == 'Packed' or status == 'Shipped' or status == 'Delivered' %}done{% else %}pending{% endif %}">
+        <div class="tk-step-icon">{% if status != 'Placed' %}<i class="fa fa-check"></i>{% else %}<i class="fa fa-box"></i>{% endif %}</div>
+        <div class="tk-step-label">Order<br>Placed</div>
+      </div>
+      <div class="tk-step {% if status == 'Packed' %}current{% elif status == 'Shipped' or status == 'Delivered' %}done{% else %}pending{% endif %}">
+        <div class="tk-step-icon">{% if status == 'Shipped' or status == 'Delivered' %}<i class="fa fa-check"></i>{% else %}<i class="fa fa-box-open"></i>{% endif %}</div>
+        <div class="tk-step-label">Packed</div>
+      </div>
+      <div class="tk-step {% if status == 'Shipped' %}current{% elif status == 'Delivered' %}done{% else %}pending{% endif %}">
+        <div class="tk-step-icon">{% if status == 'Delivered' %}<i class="fa fa-check"></i>{% else %}<i class="fa fa-truck"></i>{% endif %}</div>
+        <div class="tk-step-label">Shipped</div>
+      </div>
+      <div class="tk-step {% if status == 'Delivered' %}current{% else %}pending{% endif %}">
+        <div class="tk-step-icon"><i class="fa fa-home"></i></div>
+        <div class="tk-step-label">Delivered</div>
+      </div>
+    </div>
+    {% endwith %}
+  </div>
+
+  <div class="tk-info">
+    <div class="tk-info-item">
+      <div class="tk-info-label">Order ID</div>
+      <div class="tk-info-value">#{{ order.id }}</div>
+    </div>
+    <div class="tk-info-item">
+      <div class="tk-info-label">Status</div>
+      <div class="tk-info-value">
+        <span class="badge {% if order.status == 'Delivered' %}badge-green{% elif order.status == 'Shipped' %}badge-blue{% elif order.status == 'Packed' %}badge-orange{% else %}badge-blue{% endif %}">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+    </div>
+    <div class="tk-info-item">
+      <div class="tk-info-label">Total Amount</div>
+      <div class="tk-info-value">₹{{ order.total_amount }}</div>
+    </div>
+    <div class="tk-info-item">
+      <div class="tk-info-label">Order Date</div>
+      <div class="tk-info-value">{{ order.created_at|date:"M d, Y" }}</div>
+    </div>
+  </div>
+  {% elif not searched %}
+  <div class="tk-initial">
+    <i class="fa fa-truck-fast"></i>
+    <h3>Track your order</h3>
+    <p>Enter your Order ID above to see real-time tracking updates.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

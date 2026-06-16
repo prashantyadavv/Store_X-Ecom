@@ -1,64 +1,120 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Review Order</title>
-</head>
+{% extends 'store/base.html' %}
 
-<body>
+{% block title %}Review Order — Store_X{% endblock %}
 
-<h2>Review Your Order</h2>
+{% block extra_css %}
+<style>
+  .ck-container { width: 92%; max-width: 1100px; margin: 0 auto; padding: 24px 0 60px; }
 
-<h3>Delivery Address</h3>
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 36px; }
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+  .step-circle.active { background: var(--primary); color: white; box-shadow: 0 0 12px var(--primary-glow); }
+  .step-circle.done { background: var(--green); color: white; }
+  .step-circle.pending { background: #e0e0e0; color: var(--text-light); }
+  .step-label { font-size: 14px; font-weight: 600; }
+  .step-label.active { color: var(--primary); }
+  .step-label.done { color: var(--green); }
+  .step-label.pending { color: var(--text-light); }
+  .step-line { width: 60px; height: 2px; margin: 0 8px; }
+  .step-line.done { background: var(--green); }
+  .step-line.pending { background: #e0e0e0; }
 
-<p>
-{{ address.full_name }} <br>
-{{ address.phone }} <br>
-{{ address.address_line }} <br>
-{{ address.city }} - {{ address.pincode }} <br>
-{{ address.state }}
-</p>
+  .rv-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
 
-<h3>Products</h3>
+  .rv-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px; }
+  .rv-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .rv-card h3 i { color: var(--primary); }
 
-<table border="1" cellpadding="10">
+  /* Items */
+  .rv-item { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
+  .rv-item:last-child { border-bottom: none; }
+  .rv-item-img { width: 80px; height: 80px; border-radius: var(--radius-sm); overflow: hidden; background: #f7f7f7; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .rv-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .rv-item-info { flex: 1; }
+  .rv-item-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .rv-item-meta { font-size: 13px; color: var(--text-light); }
+  .rv-item-price { font-size: 16px; font-weight: 800; text-align: right; white-space: nowrap; }
 
-<tr>
-<th>Image</th>
-<th>Product</th>
-<th>Quantity</th>
-<th>Price</th>
-<th>Subtotal</th>
-</tr>
+  /* Address card */
+  .rv-addr { font-size: 14px; line-height: 1.7; color: var(--text-mid); }
+  .rv-addr strong { color: var(--text-dark); font-size: 15px; }
+  .rv-addr-change { margin-top: 10px; }
 
-{% for product in products %}
+  /* Summary */
+  .rv-summary { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; position: sticky; top: 80px; }
+  .rv-summary h3 { font-size: 18px; font-weight: 800; margin-bottom: 18px; border-bottom: 1px solid #e8e8e8; padding-bottom: 14px; }
+  .rv-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+  .rv-row.total { font-size: 20px; font-weight: 800; border-top: 2px solid #e8e8e8; padding-top: 14px; margin-top: 6px; }
+  .rv-free { color: var(--green); font-weight: 600; }
+  .rv-savings { color: var(--green); font-size: 13px; margin-top: 4px; }
+  .rv-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: 800; margin-top: 20px; background: linear-gradient(180deg, #FFB84D, var(--primary)); color: var(--navy); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); }
+  .rv-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
+  .rv-secure { text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-light); }
 
-<tr>
+  @media (max-width: 768px) {
+    .rv-layout { grid-template-columns: 1fr; }
+    .rv-summary { position: static; }
+    .stepper { flex-wrap: wrap; gap: 4px; }
+    .step-line { width: 30px; }
+  }
+</style>
+{% endblock %}
 
-<td>
-<img src="{{ product.image.url }}" width="80">
-</td>
+{% block content %}
+<div class="ck-container">
+  <div class="stepper">
+    <div class="step"><div class="step-circle done"><i class="fa fa-check"></i></div><span class="step-label done">Address</span></div>
+    <div class="step-line done"></div>
+    <div class="step"><div class="step-circle active">2</div><span class="step-label active">Review</span></div>
+    <div class="step-line pending"></div>
+    <div class="step"><div class="step-circle pending">3</div><span class="step-label pending">Payment</span></div>
+    <div class="step-line pending"></div>
+    <div class="step"><div class="step-circle pending"><i class="fa fa-check"></i></div><span class="step-label pending">Done</span></div>
+  </div>
 
-<td>{{ product.name }}</td>
+  <div class="rv-layout">
+    <div>
+      <div class="rv-card">
+        <h3><i class="fa fa-box"></i> Order Items</h3>
+        {% for product in products %}
+        <div class="rv-item">
+          <div class="rv-item-img">
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}"/>
+            {% else %}<i class="fa fa-image" style="font-size:24px;opacity:0.2;"></i>{% endif %}
+          </div>
+          <div class="rv-item-info">
+            <div class="rv-item-name">{{ product.name }}</div>
+            <div class="rv-item-meta">Qty: {{ product.quantity }} × ₹{{ product.price }}</div>
+          </div>
+          <div class="rv-item-price">₹{{ product.subtotal }}</div>
+        </div>
+        {% endfor %}
+      </div>
 
-<td>{{ product.quantity }}</td>
+      <div class="rv-card">
+        <h3><i class="fa fa-location-dot"></i> Delivery Address</h3>
+        <div class="rv-addr">
+          <strong>{{ address.full_name }}</strong><br>
+          {{ address.address_line }}<br>
+          {{ address.city }}, {{ address.state }} — {{ address.pincode }}<br>
+          <i class="fa fa-phone"></i> {{ address.phone }}
+        </div>
+        <div class="rv-addr-change">
+          <a href="{% url 'address' %}" class="btn btn-secondary" style="padding:8px 18px; font-size:13px;"><i class="fa fa-pen"></i> Change</a>
+        </div>
+      </div>
+    </div>
 
-<td>₹{{ product.price }}</td>
-
-<td>₹{{ product.subtotal }}</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-<h3>Total: ₹{{ total }}</h3>
-
-<br>
-
-<a href="{% url 'payment' %}">
-<button>Proceed to Payment</button>
-</a>
-
-</body>
-</html>
+    <div class="rv-summary">
+      <h3>Order Summary</h3>
+      <div class="rv-row"><span>Items ({{ products|length }})</span><span>₹{{ total }}</span></div>
+      <div class="rv-row"><span>Delivery</span><span class="rv-free">FREE</span></div>
+      <div class="rv-row total"><span>Total</span><span>₹{{ total }}</span></div>
+      <div class="rv-savings"><i class="fa fa-tag"></i> You're saving on delivery!</div>
+      <a href="{% url 'payment' %}"><button class="rv-btn"><i class="fa fa-lock"></i> Proceed to Payment</button></a>
+      <div class="rv-secure"><i class="fa fa-shield-halved"></i> Secure checkout</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

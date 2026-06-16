@@ -1,0 +1,136 @@
+{% extends 'store/base.html' %}
+
+{% block title %}My Orders — Store_X{% endblock %}
+
+{% block extra_css %}
+<style>
+  .mo-container { width: 92%; max-width: 1000px; margin: 0 auto; padding: 24px 0 60px; }
+  .mo-header { margin-bottom: 24px; }
+  .mo-header h1 { font-size: 28px; font-weight: 800; }
+  .mo-header h1 em { font-style: normal; color: var(--primary); }
+
+  /* Filter Tabs */
+  .mo-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .mo-tab {
+    padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;
+    border: 1px solid #d5d9d9; color: var(--text-mid);
+    transition: var(--transition-fast); cursor: pointer;
+  }
+  .mo-tab:hover { border-color: var(--primary); color: var(--primary); }
+  .mo-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* Order Card */
+  .mo-card {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    margin-bottom: 18px; overflow: hidden; transition: var(--transition);
+  }
+  .mo-card:hover { box-shadow: var(--shadow-md); }
+
+  .mo-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; background: #f8f9fa; border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .mo-card-header-left { display: flex; gap: 28px; flex-wrap: wrap; }
+  .mo-card-meta { }
+  .mo-card-meta-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+  .mo-card-meta-value { font-size: 14px; font-weight: 700; }
+
+  .mo-card-body { padding: 20px 24px; }
+
+  .mo-items { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .mo-item-thumb {
+    width: 64px; height: 64px; border-radius: var(--radius-sm); overflow: hidden;
+    background: #f7f7f7; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e8e8e8;
+  }
+  .mo-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .mo-card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 14px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; gap: 10px;
+  }
+  .mo-card-total { font-size: 18px; font-weight: 800; }
+  .mo-card-total small { font-size: 13px; font-weight: 400; color: var(--text-light); }
+  .mo-card-actions { display: flex; gap: 10px; }
+  .mo-card-actions .btn { padding: 8px 18px; font-size: 13px; }
+
+  /* Empty */
+  .mo-empty {
+    text-align: center; padding: 80px 20px; background: white;
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .mo-empty i { font-size: 64px; color: #e0e0e0; margin-bottom: 20px; }
+  .mo-empty h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .mo-empty p { color: var(--text-light); margin-bottom: 24px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mo-container">
+  <div class="breadcrumb">
+    <a href="{% url 'home' %}">Home</a> <span class="sep">›</span>
+    <span>My Orders</span>
+  </div>
+
+  <div class="mo-header">
+    <h1>My <em>Orders</em></h1>
+  </div>
+
+  <div class="mo-tabs">
+    <a href="{% url 'my_orders' %}" class="mo-tab {% if not current_status %}active{% endif %}">All</a>
+    <a href="{% url 'my_orders' %}?status=Placed" class="mo-tab {% if current_status == 'Placed' %}active{% endif %}">Placed</a>
+    <a href="{% url 'my_orders' %}?status=Packed" class="mo-tab {% if current_status == 'Packed' %}active{% endif %}">Packed</a>
+    <a href="{% url 'my_orders' %}?status=Shipped" class="mo-tab {% if current_status == 'Shipped' %}active{% endif %}">Shipped</a>
+    <a href="{% url 'my_orders' %}?status=Delivered" class="mo-tab {% if current_status == 'Delivered' %}active{% endif %}">Delivered</a>
+  </div>
+
+  {% for order in orders %}
+  <div class="mo-card reveal">
+    <div class="mo-card-header">
+      <div class="mo-card-header-left">
+        <div class="mo-card-meta">
+          <div class="mo-card-meta-label">Order ID</div>
+          <div class="mo-card-meta-value">#{{ order.id }}</div>
+        </div>
+        <div class="mo-card-meta">
+          <div class="mo-card-meta-label">Order Date</div>
+          <div class="mo-card-meta-value">{{ order.created_at|date:"M d, Y" }}</div>
+        </div>
+        <div class="mo-card-meta">
+          <div class="mo-card-meta-label">Total</div>
+          <div class="mo-card-meta-value">₹{{ order.total_amount }}</div>
+        </div>
+      </div>
+      <span class="badge {% if order.status == 'Delivered' %}badge-green{% elif order.status == 'Shipped' %}badge-blue{% elif order.status == 'Packed' %}badge-orange{% else %}badge-blue{% endif %}">
+        <i class="fa {% if order.status == 'Delivered' %}fa-check-circle{% elif order.status == 'Shipped' %}fa-truck{% elif order.status == 'Packed' %}fa-box-open{% else %}fa-clock{% endif %}"></i>
+        {{ order.get_status_display }}
+      </span>
+    </div>
+    <div class="mo-card-body">
+      <div class="mo-items">
+        {% for item in order.orderitem_set.all %}
+        <div class="mo-item-thumb" title="{{ item.product.name }}">
+          {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"/>
+          {% else %}<i class="fa fa-image" style="opacity:0.2;font-size:20px;"></i>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mo-card-footer">
+        <div class="mo-card-total">₹{{ order.total_amount }} <small>• {{ order.orderitem_set.count }} item{{ order.orderitem_set.count|pluralize }}</small></div>
+        <div class="mo-card-actions">
+          <a href="{% url 'track_order' %}?order_id={{ order.id }}" class="btn btn-primary"><i class="fa fa-truck"></i> Track</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="mo-empty">
+    <i class="fa fa-shopping-bag"></i>
+    <h3>No orders yet</h3>
+    <p>You haven't placed any orders. Start shopping to see them here!</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary"><i class="fa fa-shopping-cart"></i> Start Shopping</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

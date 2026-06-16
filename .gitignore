@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+
+# Virtual Environment
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Static files collected by Django
+staticfiles/
+
+# Pytest
+.pytest_cache/
+
+# Temp check scripts
+check_*.py
+run_cmd*.py
+tmp_*.py
